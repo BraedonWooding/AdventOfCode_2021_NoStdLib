@@ -1,4 +1,4 @@
-#include "util.h"
+#include <nostd.h>
 
 #define STDOUT_FD (1)
 #define EXIT_SUCCESS (0)
@@ -37,16 +37,3 @@ int _main(int argc, char *argv[]) {
     nostd_write_char(STDOUT_FD, '\n');
     return EXIT_SUCCESS;
 }
-
-asm(
-    ".text\n"
-    ".globl _start\n"
-    "_start:\n"
-    "popq %rdi\n"
-    "movq %rsp, %rsi\n"
-    "callq _main\n"
-    "movq %rax, %rdi\n"
-    "callq nostd_exit\n"
-);
-
-void _start();
