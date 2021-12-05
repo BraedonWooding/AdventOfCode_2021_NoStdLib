@@ -3,8 +3,6 @@
 #define STDOUT_FD (1)
 #define EXIT_SUCCESS (0)
 
-const static char hello[] = "Hello, World\n";
-
 int _main(int argc, char *argv[]) {
     int acc = 0;
     int buf[3];

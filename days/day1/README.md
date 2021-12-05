@@ -1,4 +1,6 @@
-# Day 1
+# Day 1 (~2 hrs)
+
+> Longer due to all the nostd code required.
 
 ## Part 1
 

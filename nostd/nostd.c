@@ -8,8 +8,9 @@ int nostd_write(unsigned int fd, const char *buf, size_t len)
         "movq %1, %%rsi\n"
         "movq %2, %%rdx\n"
         "syscall\n"
-        : : "r"((size_t)fd), "r"((size_t)buf), "r"((size_t)len) : "%rdi", "%rsi", "%rdx"
-    );
+        :
+        : "r"((size_t)fd), "r"((size_t)buf), "r"((size_t)len)
+        : "%rdi", "%rsi", "%rdx");
 }
 
 int nostd_write_int(unsigned int fd, int n)
@@ -17,7 +18,8 @@ int nostd_write_int(unsigned int fd, int n)
     char buf[1024];
     // stupid implementation, presumes that n <= 1_000_000
     int bases[] = {
-        1000000, 100000, 10000, 1000, 100, 10, 1};
+        1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 //
+    };
     int p = 0;
 
     for (int i = 0; i < sizeof(bases) / sizeof(bases[0]); i++)
@@ -53,8 +55,9 @@ void nostd_exit(int code)
         "movq $60, %%rax\n"
         "movq %0, %%rdi\n"
         "syscall\n"
-        : : "r"((size_t)code) : "%rdi"
-    );
+        :
+        : "r"((size_t)code)
+        : "%rdi");
 }
 
 size_t nostd_strlen(char *buf)
@@ -98,7 +101,7 @@ __attribute__((naked)) void _start()
         "callq _main\n"
         "movq %%rax, %%rdi\n"
         "call %P0"
-        : : "i"(nostd_exit) : "%rdi", "%rax"
-    );
+        :
+        : "i"(nostd_exit)
+        : "%rdi", "%rax");
 }
-
