@@ -62,9 +62,13 @@ void nostd_exit(int code)
 
 size_t nostd_strlen(char *buf)
 {
+    if (!buf)
+        return 0;
+
     char *p;
     for (p = buf; *p; p++)
-        ;
+    {
+    }
     return p - buf;
 }
 
@@ -74,6 +78,19 @@ int nostd_power_slow(int base, int power)
     for (int i = 0; i < power; i++)
         result *= base;
     return result;
+}
+
+unsigned int nostd_intparse_bin(char *buf)
+{
+    unsigned int res = 0;
+    size_t len = nostd_strlen(buf);
+
+    for (int i = len - 1; i >= 0; i--) {
+        // convert binary '1'/'0' to 1/0 then shift into place
+        res |= ((buf[i] - '0') << (len - 1 - i));
+    }
+
+    return res;
 }
 
 /* Presuming input is valid ;) */
