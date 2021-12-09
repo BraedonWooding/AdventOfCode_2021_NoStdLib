@@ -10,6 +10,10 @@ enum _bool {
     TRUE = 1,
 };
 
+int nostd_iabs(int);
+
+void nostd_radix_sort(void *elements[], int len, unsigned int(*fn_sort)(void *a));
+
 int nostd_write(unsigned int fd, const char *buf, size_t len);
 
 void nostd_exit(int code);

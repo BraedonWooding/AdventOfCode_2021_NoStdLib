@@ -80,12 +80,75 @@ int nostd_power_slow(int base, int power)
     return result;
 }
 
+void nostd_radix_sort_rec(void *elements[], int len, int bit, unsigned int (*fn_parse)(void *a));
+
+void nostd_radix_sort(void *elements[], int len, unsigned int (*fn_parse)(void *a))
+{
+    if (len == 0)
+        return;
+
+    // We are presuming little endian because we are cute lil programmers
+    // who don't believe that servers exist ;)
+
+    // We are going to be some cool mutha'f**ckers and implement binary quicksort
+    // also known as in-place MSD radix sort implements
+    nostd_radix_sort_rec(elements, len, 31, fn_parse);
+}
+
+int nostd_iabs(int n) {
+    if (n < 0) return -n;
+    return n;
+}
+
+void nostd_radix_sort_rec(void *elements[], int len, int bit, unsigned int (*fn_parse)(void *a))
+{
+    if (len <= 1 || bit < 0) return;
+
+    // we define 2 bins, the first one is for 0s and the second is for 1s
+    // 0 grows forwards, and 1 grows backwards
+    // for consistency the operation is *(++/-- bin) = element
+    void **_1_bin = elements - 1;
+    void **_0_bin = &elements[len];
+    int _0_len = 0;
+    int _1_len = 0;
+
+    // I could do 11 here *for speed*, but for the sake of all that is good
+    // in this little world, I'll preserve my future sanity instead ;)
+    // you may argue len is 64 bit and thus I should support 64 bit
+    // and to that I say; no.
+    while (_0_bin - _1_bin > 1)
+    {
+        unsigned int parsed = fn_parse(_1_bin[1]);
+        if (parsed & (1 << bit))
+        {
+            // this means that we have a 1 bit in this position
+            // which means that we want to push it to the 1 bin
+            // this is no real work
+            _1_bin++;
+            _1_len++;
+        }
+        else
+        {
+            // otherwise we want to push it to the end
+            // so we'll do this by swapping it with the _0_bin
+            void *tmp = *(--_0_bin);
+            *_0_bin = _1_bin[1];
+            _1_bin[1] = tmp;
+            _0_len++;
+        }
+    }
+
+    nostd_radix_sort_rec(elements, _1_len, bit - 1, fn_parse);
+    nostd_radix_sort_rec(_0_bin, _0_len, bit - 1, fn_parse);
+}
+
 unsigned int nostd_intparse_bin(char *buf)
 {
     unsigned int res = 0;
     size_t len = nostd_strlen(buf);
 
-    for (int i = len - 1; i >= 0; i--) {
+    for (int i = len - 1; i >= 0; i--)
+    {
         // convert binary '1'/'0' to 1/0 then shift into place
         res |= ((buf[i] - '0') << (len - 1 - i));
     }
