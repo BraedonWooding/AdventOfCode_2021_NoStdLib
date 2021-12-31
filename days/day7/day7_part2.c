@@ -31,14 +31,11 @@ int _main(int argc, char *argv[])
         resolve this any easier...
      */
 
-    // find average
-    int average;
-    
     int sum = 0;
     for (int i = 1; i < argc; i++) {
         sum += nostd_intparse(argv[i]);
     }
-    average = sum / (argc - 1);
+    int average = sum / (argc - 1);
 
     int totalCost = 0;
     for (int i = 1; i < argc; i++) {
