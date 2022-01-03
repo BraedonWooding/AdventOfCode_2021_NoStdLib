@@ -15,6 +15,13 @@ int nostd_write(unsigned int fd, const char *buf, size_t len)
 
 int nostd_write_int(unsigned int fd, int n)
 {
+    if (n < 0)
+    {
+        int amount = nostd_write_char(fd, '-');
+        amount += nostd_write_int(fd, -n);
+        return amount;
+    }
+
     char buf[1024];
     // stupid implementation, presumes that n <= 1_000_000
     int bases[] = {
@@ -38,7 +45,7 @@ int nostd_write_int(unsigned int fd, int n)
     }
 
     buf[p] = 0;
-    nostd_write(fd, buf, p);
+    return nostd_write(fd, buf, p);
 }
 
 int nostd_write_char(unsigned int fd, char chr)
@@ -95,14 +102,17 @@ void nostd_radix_sort(void *elements[], int len, unsigned int (*fn_parse)(void *
     nostd_radix_sort_rec(elements, len, 31, fn_parse);
 }
 
-int nostd_iabs(int n) {
-    if (n < 0) return -n;
+int nostd_iabs(int n)
+{
+    if (n < 0)
+        return -n;
     return n;
 }
 
 void nostd_radix_sort_rec(void *elements[], int len, int bit, unsigned int (*fn_parse)(void *a))
 {
-    if (len <= 1 || bit < 0) return;
+    if (len <= 1 || bit < 0)
+        return;
 
     // we define 2 bins, the first one is for 0s and the second is for 1s
     // 0 grows forwards, and 1 grows backwards
@@ -168,6 +178,54 @@ int nostd_intparse(char *buf)
     }
 
     return res;
+}
+
+int nostd_read(int fd, void *buf, size_t count)
+{
+    int ret;
+    asm(
+        "movq $0, %%rax\n"
+        "movl %1, %%edi\n"
+        "movq %2, %%rsi\n"
+        "movq %3, %%rdx\n"
+        "syscall\n"
+        "movl %%eax, %0\n"
+        : "=r"(ret)
+        : "r"((int)fd), "r"((size_t)buf), "r"((size_t)count)
+        : "%edi", "%rsi", "%rdx");
+    return ret;
+}
+
+int nostd_close(int fd)
+{
+    asm(
+        "movq $3, %%rax\n"
+        "movl %0, %%edi\n"
+        "syscall\n"
+        :
+        : "r"((int)fd)
+        : "%edi");
+}
+
+int nostd_open(const char *path, open_flags_t flags, mode_t mode)
+{
+    int ret;
+    asm(
+        "movq $2, %%rax\n"
+        "movq %1, %%rdi\n"
+        "movq %2, %%rsi\n"
+        "movq %3, %%rdx\n"
+        "syscall\n"
+        "movl %%eax, %0\n"
+        : "=r"(ret)
+        : "r"(path), "r"((long int)flags), "r"((long unsigned int)mode)
+        : "%rdi", "%rsi", "%rdx");
+    return ret;
+}
+
+mode_t perm_to_mode(mode_class_t class, mode_permission_t perm)
+{
+    return 1 << (perm + class);
 }
 
 int _main(int argc, char *argv[]);
