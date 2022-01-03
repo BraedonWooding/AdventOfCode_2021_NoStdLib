@@ -14,15 +14,20 @@ No promises on correctness, and a bunch of silly decisions are made for the sake
 
 Since we can't use `main()` (that's a C stdlib thing) we have to roll our own.  We call it `_main` and the assembly to do so roughly looks like below;
 
-```asm
-.text
-.globl _start
-_start:
-  popq %rdi           # argc
-  movq %rsp, %rsi     # argv
-  call _main
-  movq %rax, %rdi     # exit code from _main
-  call nostd_exit
+```c
+__attribute__((naked)) void _start()
+{
+    asm(
+        "xorl %%eax, %%eax\n"
+        "popq %%rdi\n"
+        "movq %%rsp, %%rsi\n"
+        "callq _main\n"
+        "movq %%rax, %%rdi\n"
+        "call %P0"
+        :
+        : "i"(nostd_exit)
+        : "%rdi", "%rax");
+}
 ```
 
 ### Syscall alternatives
@@ -30,16 +35,26 @@ _start:
 It's pretty easy to call a syscall in C using inline assembly an example is below
 
 ```c
-// nostd_write
-register int syscall_no             asm("rax") = 1;
-register unsigned int arg1_fd       asm("rdi") = fd;
-register const char *arg2_buf       asm("rsi") = buf;
-register size_t arg3_len            asm("rdx") = len;
-asm("syscall");
+int nostd_write(unsigned int fd, const char *buf, size_t len)
+{
+    asm(
+        "movq $1, %%rax\n"
+        "movq %0, %%rdi\n"
+        "movq %1, %%rsi\n"
+        "movq %2, %%rdx\n"
+        "syscall\n"
+        :
+        : "r"((size_t)fd), "r"((size_t)buf), "r"((size_t)len)
+        : "%rdi", "%rsi", "%rdx");
+    // we either let the return fall off, since 'rax' should already
+    // have the correct value from the syscall, or we'll just create a temporary
+    // and write to that from rax then return that... I'm not sure which is more correct
+    // but they both seem to work.
+}
 ```
 
 So in most cases the difficulty is the lack of nice C stdlib functions around malloc/string & memory stuff.
 
 ### Memory Allocation
 
-Is (manifesting my destiny) done through mmap + arena allocation or static mem.
+Hopefully, none :).
